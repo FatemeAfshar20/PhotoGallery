@@ -110,7 +110,6 @@ public class PhotoGalleryFragment extends Fragment {
             }
         });
     }
-
     private class PhotoHolder extends RecyclerView.ViewHolder {
 
         private TextView mTextView;
