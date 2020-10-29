@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -29,7 +30,7 @@ public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PGF";
     private RecyclerView mRecyclerView;
     private PhotoRepository mRepository;
-
+    int nubmer= 2;
     public PhotoGalleryFragment() {
         // Required empty public constructor
     }
@@ -47,7 +48,7 @@ public class PhotoGalleryFragment extends Fragment {
 
         mRepository = new PhotoRepository();
 
-        FlickrTask flickrTask = new FlickrTask();
+        FlickrTask flickrTask = new FlickrTask("1");
         flickrTask.execute();
 
         /*Thread thread = new Thread(new Runnable() {
@@ -95,6 +96,19 @@ public class PhotoGalleryFragment extends Fragment {
     private void setupAdapter(List<GalleryItem> items) {
         PhotoAdapter adapter = new PhotoAdapter(items);
         mRecyclerView.setAdapter(adapter);
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (!recyclerView.canScrollVertically(1)) {
+
+                    if(nubmer<10){
+                        new FlickrTask(String.valueOf(nubmer)).execute();
+                        nubmer++;
+                    }
+                }
+            }
+        });
     }
 
     private class PhotoHolder extends RecyclerView.ViewHolder {
@@ -149,11 +163,20 @@ public class PhotoGalleryFragment extends Fragment {
     }
 
     private class FlickrTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+        String number="";
+
+        public String getNumber() {
+            return number;
+        }
+
+        public FlickrTask(String number) {
+            this.number = number;
+        }
 
         //this method runs on background thread
         @Override
         protected List<GalleryItem> doInBackground(Void... voids) {
-            List<GalleryItem> items = mRepository.fetchItems();
+            List<GalleryItem> items = mRepository.fetchItems(number);
             return items;
         }
 

@@ -2,6 +2,9 @@ package org.maktab.photogallery.repository;
 
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,21 +19,34 @@ public class PhotoRepository {
 
     private static final String TAG = "PhotoRepository";
     private FlickrFetcher mFetcher;
+    private List<GalleryItem> mItems=new ArrayList<>();
 
     public PhotoRepository() {
         mFetcher = new FlickrFetcher();
     }
 
+    public List<GalleryItem> getItems() {
+        return mItems;
+    }
+
+    public void setItems(List<GalleryItem> items) {
+        mItems = items;
+    }
+
     //this method must run on background thread.
-    public List<GalleryItem> fetchItems() {
-        String url = mFetcher.getRecentUrl();
+    public List<GalleryItem> fetchItems(String number) {
+        GsonBuilder gsonBuilder=new GsonBuilder();
+
+        Gson gson=new GsonBuilder().setPrettyPrinting().create();
+        String url = mFetcher.getRecentUrl(number);
         try {
             String response = mFetcher.getUrlString(url);
             Log.d(TAG, "response: " + response);
 
             JSONObject bodyObject = new JSONObject(response);
             List<GalleryItem> items = parseJson(bodyObject);
-            return items;
+            mItems.addAll(items);
+            return mItems;
         } catch (IOException | JSONException e) {
             Log.e(TAG, e.getMessage(), e);
             return null;
@@ -39,6 +55,7 @@ public class PhotoRepository {
 
     private List<GalleryItem> parseJson(JSONObject bodyObject) throws JSONException {
         List<GalleryItem> items = new ArrayList<>();
+        Gson gson=new GsonBuilder().setPrettyPrinting().create();
 
         JSONObject photosObject = bodyObject.getJSONObject("photos");
         JSONArray photoArray = photosObject.getJSONArray("photo");
@@ -49,11 +66,13 @@ public class PhotoRepository {
             if (!photoObject.has("url_s"))
                 continue;
 
-            String id = photoObject.getString("id");
+       /*     String id = photoObject.getString("id");
             String title = photoObject.getString("title");
-            String url = photoObject.getString("url_s");
+            String url = photoObject.getString("url_s");*/
 
-            GalleryItem item = new GalleryItem(id, title, url);
+ /*           GalleryItem item = new GalleryItem(id, title, url);*/
+
+            GalleryItem item=gson.fromJson(String.valueOf(photoObject),GalleryItem.class);
             items.add(item);
         }
 

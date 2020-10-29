@@ -1,8 +1,13 @@
 package org.maktab.photogallery.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class GalleryItem {
+    @SerializedName("id")
     private String mId;
+    @SerializedName("title")
     private String mTitle;
+    @SerializedName("url_s")
     private String mUrl;
 
     public String getId() {
