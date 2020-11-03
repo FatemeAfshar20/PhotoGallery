@@ -8,6 +8,7 @@ import android.os.Message;
 
 import androidx.annotation.NonNull;
 
+import org.maktab.photogallery.LruCach.PhotoGalleryLruCache;
 import org.maktab.photogallery.network.FlickrFetcher;
 
 import java.io.IOException;
@@ -23,6 +24,8 @@ public class BitmapLooper<T> extends HandlerThread {
     private ConcurrentMap<T, String> mTargetStringMap =
             new ConcurrentHashMap<>();
 
+    private PhotoGalleryLruCache mPhotoGalleryLruCache;
+
     public BitmapDownloadedListener getBitmapDownloaded() {
         return mBitmapDownloaded;
     }
@@ -36,6 +39,8 @@ public class BitmapLooper<T> extends HandlerThread {
     public BitmapLooper() {
         super("Bitmap Looper");
         mFlickrFetcher = new FlickrFetcher();
+
+        mPhotoGalleryLruCache=new PhotoGalleryLruCache();
     }
 
     public Handler getMainHandler() {
@@ -78,13 +83,20 @@ public class BitmapLooper<T> extends HandlerThread {
                     0,
                     bitmapArray.length);
 
+            mPhotoGalleryLruCache.
+                    addBitmapToMemoryCache(url,bitmap);
+
             mMainHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (mTargetStringMap.get(target) != url)
                         return;
 
-                            mBitmapDownloaded.onBitmapDownloaded(target,bitmap);
+                            mBitmapDownloaded.
+                                    onBitmapDownloaded(
+                                            target,
+                                            mPhotoGalleryLruCache.
+                                                    getBitmapFromMemCache(url));
                 }
             });
         }

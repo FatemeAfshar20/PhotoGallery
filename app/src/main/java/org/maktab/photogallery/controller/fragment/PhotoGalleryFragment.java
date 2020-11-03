@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.maktab.photogallery.LruCach.PhotoGalleryLruCache;
 import org.maktab.photogallery.R;
 import org.maktab.photogallery.Service.BitmapLooper;
 import org.maktab.photogallery.model.GalleryItem;
@@ -66,7 +67,6 @@ public class PhotoGalleryFragment extends Fragment {
                 photoHolder.bindBitmap(bitmap);
             }
         });
-
         /*Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
