@@ -34,8 +34,8 @@ public class PhotoRepository {
     }
 
     //this method must run on background thread.
-    public List<GalleryItem> fetchItems(String number) {
-        String url = mFetcher.getRecentUrl(number);
+    public List<GalleryItem> fetchItems() {
+        String url = mFetcher.getPopularUrl();
         try {
             String response = mFetcher.getUrlString(url);
             Log.d(TAG, "response: " + response);

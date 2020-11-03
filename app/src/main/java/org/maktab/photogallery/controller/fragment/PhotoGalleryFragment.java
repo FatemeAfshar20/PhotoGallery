@@ -197,7 +197,7 @@ public class PhotoGalleryFragment extends Fragment {
         //this method runs on background thread
         @Override
         protected List<GalleryItem> doInBackground(Void... voids) {
-            List<GalleryItem> items = mRepository.fetchItems(number);
+            List<GalleryItem> items = mRepository.fetchItems();
             return items;
         }
 
