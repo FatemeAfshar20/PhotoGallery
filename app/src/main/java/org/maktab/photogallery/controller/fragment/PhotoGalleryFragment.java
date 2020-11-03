@@ -1,27 +1,24 @@
 package org.maktab.photogallery.controller.fragment;
 
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-
 import org.maktab.photogallery.R;
+import org.maktab.photogallery.Service.BitmapLooper;
 import org.maktab.photogallery.model.GalleryItem;
-import org.maktab.photogallery.network.FlickrFetcher;
 import org.maktab.photogallery.repository.PhotoRepository;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PhotoGalleryFragment extends Fragment {
@@ -30,7 +27,12 @@ public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PGF";
     private RecyclerView mRecyclerView;
     private PhotoRepository mRepository;
-    int nubmer= 2;
+    int nubmer = 2;
+
+    private BitmapLooper<PhotoHolder> mHolderBitmapLooper;
+
+    private Handler mMainHandler;
+
     public PhotoGalleryFragment() {
         // Required empty public constructor
     }
@@ -47,9 +49,23 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         mRepository = new PhotoRepository();
+        mMainHandler = new Handler();
 
         FlickrTask flickrTask = new FlickrTask("1");
         flickrTask.execute();
+
+        mHolderBitmapLooper = new BitmapLooper<>();
+        mHolderBitmapLooper.start();
+        mHolderBitmapLooper.getLooper();
+        mHolderBitmapLooper.setMainHandler(mMainHandler);
+        mHolderBitmapLooper.setBitmapDownloaded(new BitmapLooper.BitmapDownloadedListener() {
+            @Override
+            public void onBitmapDownloaded(Object target, Bitmap bitmap) {
+
+                PhotoGalleryFragment.PhotoHolder photoHolder = (PhotoGalleryFragment.PhotoHolder) target;
+                photoHolder.bindBitmap(bitmap);
+            }
+        });
 
         /*Thread thread = new Thread(new Runnable() {
             @Override
@@ -102,7 +118,7 @@ public class PhotoGalleryFragment extends Fragment {
                 super.onScrollStateChanged(recyclerView, newState);
                 if (!recyclerView.canScrollVertically(1)) {
 
-                    if(nubmer<10){
+                    if (nubmer < 10) {
                         new FlickrTask(String.valueOf(nubmer)).execute();
                         nubmer++;
                     }
@@ -110,20 +126,26 @@ public class PhotoGalleryFragment extends Fragment {
             }
         });
     }
-    private class PhotoHolder extends RecyclerView.ViewHolder {
 
-        private TextView mTextView;
+    public class PhotoHolder extends RecyclerView.ViewHolder {
+
+        private ImageView mImageView;
         private GalleryItem mItem;
 
         public PhotoHolder(@NonNull View itemView) {
             super(itemView);
 
-            mTextView = (TextView) itemView;
+            mImageView = itemView.findViewById(R.id.img_gallery);
         }
 
         public void bindGalleryItem(GalleryItem item) {
             mItem = item;
-            mTextView.setText(mItem.getTitle());
+            mImageView.setImageDrawable(getResources().getDrawable(R.mipmap.ic_place_holder));
+            mHolderBitmapLooper.setMessageOnQueue(this, mItem.getUrl());
+        }
+
+        public void bindBitmap(Bitmap bitmap) {
+            mImageView.setImageBitmap(bitmap);
         }
     }
 
@@ -146,8 +168,8 @@ public class PhotoGalleryFragment extends Fragment {
         @NonNull
         @Override
         public PhotoHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            TextView textView = new TextView(getContext());
-            return new PhotoHolder(textView);
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.item_photo, parent, false);
+            return new PhotoHolder(view);
         }
 
         @Override
@@ -162,7 +184,7 @@ public class PhotoGalleryFragment extends Fragment {
     }
 
     private class FlickrTask extends AsyncTask<Void, Void, List<GalleryItem>> {
-        String number="";
+        String number = "";
 
         public String getNumber() {
             return number;
@@ -186,5 +208,19 @@ public class PhotoGalleryFragment extends Fragment {
 
             setupAdapter(items);
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        mHolderBitmapLooper.clearQueue();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        mHolderBitmapLooper.quit();
     }
 }

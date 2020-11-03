@@ -35,9 +35,6 @@ public class PhotoRepository {
 
     //this method must run on background thread.
     public List<GalleryItem> fetchItems(String number) {
-        GsonBuilder gsonBuilder=new GsonBuilder();
-
-        Gson gson=new GsonBuilder().setPrettyPrinting().create();
         String url = mFetcher.getRecentUrl(number);
         try {
             String response = mFetcher.getUrlString(url);
@@ -65,13 +62,11 @@ public class PhotoRepository {
 
             if (!photoObject.has("url_s"))
                 continue;
-
        /*     String id = photoObject.getString("id");
             String title = photoObject.getString("title");
             String url = photoObject.getString("url_s");*/
 
  /*           GalleryItem item = new GalleryItem(id, title, url);*/
-
             GalleryItem item=gson.fromJson(String.valueOf(photoObject),GalleryItem.class);
             items.add(item);
         }
